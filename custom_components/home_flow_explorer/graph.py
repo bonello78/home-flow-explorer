@@ -144,6 +144,9 @@ T = {
         "a_trigger_other": "scatta il trigger", "a_action_dev": "comanda {name}", "a_action_other": "esegue le azioni",
         "a_s_trig": "{name} si attiva", "a_t_trig": "Il cambio di stato arriva a Home Assistant e fa partire l'automazione.",
         "a_s_time": "Arriva l'orario", "a_s_sun": "Alba o tramonto", "a_s_other": "Scatta il trigger",
+        "a_s_start": "Home Assistant si avvia", "a_s_stop": "Home Assistant si sta spegnendo",
+        "a_trigger_start": "il sistema si avvia", "a_trigger_stop": "il sistema si spegne", "a_action_notify": "manda una notifica",
+        "a_s_trig_more": "{name} e altri {n}", "a_trigger_dev_more": "si attiva {name} (o uno degli altri {n})",
         "a_t_internal": "Il trigger nasce dentro Home Assistant.",
         "a_s_eval": "Home Assistant valuta l'automazione", "a_t_eval": "Controlla le condizioni e decide cosa fare.",
         "a_s_act": "Comanda {name}", "a_t_act_local": "Il comando arriva al dispositivo in casa.",
@@ -237,6 +240,9 @@ T = {
         "a_trigger_other": "the trigger fires", "a_action_dev": "controls {name}", "a_action_other": "runs the actions",
         "a_s_trig": "{name} changes", "a_t_trig": "The state change reaches Home Assistant and starts the automation.",
         "a_s_time": "The time comes", "a_s_sun": "Sunrise or sunset", "a_s_other": "The trigger fires",
+        "a_s_start": "Home Assistant starts", "a_s_stop": "Home Assistant is shutting down",
+        "a_trigger_start": "the system starts", "a_trigger_stop": "the system shuts down", "a_action_notify": "sends a notification",
+        "a_s_trig_more": "{name} and {n} more", "a_trigger_dev_more": "{name} (or one of {n} others) fires",
         "a_t_internal": "The trigger starts inside Home Assistant.",
         "a_s_eval": "Home Assistant runs the automation", "a_t_eval": "It checks the conditions and decides what to do.",
         "a_s_act": "Controls {name}", "a_t_act_local": "The command reaches the device at home.",
@@ -801,7 +807,7 @@ def build(snap: dict, opts: dict) -> dict:
                 if gp and gp not in [x[0] for x in act_groups]:
                     act_groups.append((gp, next((e["entity_id"] for e in ents_by_dev.get(did, [])), did), svc))
         score = (2 if trig_groups else 0) + (3 if act_groups else 0) + (1 if notifies else 0)
-        if chosen or trig_groups or act_groups:
+        if chosen or trig_groups or act_groups or notifies:
             autos.append((score, a, res, trig_groups, act_groups, helpers, notifies))
     if not chosen:
         autos.sort(key=lambda x: (-x[0], x[1].get("name") or ""))
@@ -809,9 +815,12 @@ def build(snap: dict, opts: dict) -> dict:
     for score, a, res, trig_groups, act_groups, helpers, notifies in autos:
         steps = []
         out_clouds: list[str] = []
+        n_more = len(res["trigger_entities"]) - 1
         for gp, eid in trig_groups[:2]:
-            name = ent_label(eid)
-            st = {"title": t["a_s_trig"].format(name=_short(name, 30)), "path": from_device(gp),
+            name = _short(ent_label(eid), 30)
+            title = (t["a_s_trig_more"].format(name=name, n=n_more) if n_more > 0 and len(trig_groups) == 1
+                     else t["a_s_trig"].format(name=name))
+            st = {"title": title, "path": from_device(gp),
                   "text": t["a_t_trig"], "data": [[t["k_trigger"], res["trigger_types"][0] if res["trigger_types"] else "state"], [t["k_entity"], eid]]}
             if gp.get("cloud"):
                 st["out"] = True
@@ -823,6 +832,9 @@ def build(snap: dict, opts: dict) -> dict:
                 at = ", ".join(res["times"][:3])
                 steps.append({"title": t["a_s_time"], "path": ["ha"], "text": t["a_t_internal"],
                               "data": [[t["k_trigger"], t["time_at"].format(at=at) if at else "time"]]})
+            elif res.get("ha_event"):
+                steps.append({"title": t["a_s_start"] if res["ha_event"] == "start" else t["a_s_stop"],
+                              "path": ["ha"], "text": t["a_t_internal"], "data": [[t["k_trigger"], "homeassistant." + res["ha_event"]]]})
             elif ttype == "sun":
                 steps.append({"title": t["a_s_sun"], "path": ["ha"], "text": t["a_t_internal"], "data": [[t["k_trigger"], "sun"]]})
             else:
@@ -849,10 +861,11 @@ def build(snap: dict, opts: dict) -> dict:
             steps.append({"title": t["a_s_notify"], "path": g.via("ha", "push", "phones"), "out": True,
                           "text": t["n_t1"], "data": [[t["k_service"], notifies[0]]]})
             out_clouds.append(t["push"])
-        trig_txt = (t["a_trigger_dev"].format(name=ent_label(trig_groups[0][1])) if trig_groups
+        trig_txt = ((t["a_trigger_dev_more"] if n_more > 0 else t["a_trigger_dev"]).format(name=ent_label(trig_groups[0][1]), n=n_more) if trig_groups
+                    else (t["a_trigger_start"] if res["ha_event"] == "start" else t["a_trigger_stop"]) if res.get("ha_event")
                     else t["a_trigger_time"] if res["trigger_types"][:1] == ["time"]
                     else t["a_trigger_sun"] if res["trigger_types"][:1] == ["sun"] else t["a_trigger_other"])
-        act_txt = (t["a_action_dev"].format(name=ent_label(act_groups[0][1])) if act_groups else t["a_action_other"])
+        act_txt = (t["a_action_dev"].format(name=ent_label(act_groups[0][1])) if act_groups else t["a_action_notify"] if notifies else t["a_action_other"])
         desc = (cfg.get("description") or "").strip()
         summary = desc.split("\n")[0]
         if len(summary) > 200:
@@ -912,6 +925,8 @@ def _analyze(cfg: dict) -> dict:
                     res["trigger_entities"].append(eid)
         if tr.get("device_id") and not _is_template(tr.get("device_id")):
             res["trigger_devices"].append(tr["device_id"])
+        if ttype == "homeassistant" and tr.get("event") in ("start", "shutdown"):
+            res.setdefault("ha_event", tr["event"])
         if ttype == "time":
             for at in _as_list(tr.get("at")):
                 if isinstance(at, str) and not _is_template(at):
