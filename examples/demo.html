@@ -8,7 +8,7 @@ main{max-width:1320px;margin:0 auto;padding:clamp(8px,2vw,24px)}</style></head>
 <body><main><home-flow-explorer></home-flow-explorer></main>
 <!-- The card file is inlined so the demo opens straight from disk. -->
 <script>
-// home-flow-explorer v1.0.0 — https://github.com/bonello78/home-flow-explorer — MIT
+// home-flow-explorer v2.0.0 — https://github.com/bonello78/home-flow-explorer — MIT
 // Interactive map of how messages travel through a smart home (Lovelace card).
 // No data inside: nodes, edges and scenarios come from the card configuration.
 const HFE_CSS = `
@@ -111,8 +111,19 @@ const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const key = (a,b) => [a,b].sort().join('|');
 
 class HomeFlowExplorer extends HTMLElement {
+  static getStubConfig() { return {source: 'auto'}; }
   setConfig(c) {
-    if (!c || !Array.isArray(c.nodes) || !Array.isArray(c.scenarios)) throw new Error('home-flow-explorer: nodes and scenarios are required');
+    if (c && c.source === 'auto') {
+      // the map comes from the Home Flow Explorer integration; the rest of the config adds or overrides
+      this._raw = c; this._auto = true; this._loaded = false;
+      if (this.isConnected) this._wait();
+      return;
+    }
+    this._auto = false;
+    if (!c || !Array.isArray(c.nodes) || !Array.isArray(c.scenarios)) throw new Error('home-flow-explorer: nodes and scenarios are required, or source: auto');
+    this._apply(c);
+  }
+  _apply(c) {
     this.c = c; this.sc = 0; this.si = 0; this.playing = false; this.prog = 1; this.mob = null;
     this.nodes = {}; c.nodes.forEach(n => this.nodes[n.id] = n);
     this.S = c.scenarios;
@@ -120,13 +131,56 @@ class HomeFlowExplorer extends HTMLElement {
     this.grp = this.groups[0];
     if (this.isConnected) this.build();
   }
-  set hass(h) { this._h = h; const d = !!(h && h.themes && h.themes.darkMode); if (d !== this._dark) { this._dark = d; this.toggleAttribute('dark', d); } }
+  _msg(text) {
+    if (!this.root) this.root = this.attachShadow({mode:'open'});
+    this.root.innerHTML = `<style>${HFE_CSS}</style><div class="wrap"><p class="lead">${esc(text)}</p></div>`;
+  }
+  _wait() {
+    const it = String((this._raw && this._raw.language) || (this._h && this._h.language) || document.documentElement.lang || 'en').startsWith('it');
+    this._msg(it ? 'Preparo la mappa…' : 'Building the map…');
+    if (this._h) this._fetch();
+  }
+  _fetch() {
+    if (this._loading || this._loaded || !this._h) return;
+    this._loading = true;
+    const it = String((this._raw && this._raw.language) || this._h.language || 'en').startsWith('it');
+    this._h.callWS({type: 'home_flow_explorer/graph'}).then(data => {
+      this._loading = false; this._loaded = true;
+      this._apply(HomeFlowExplorer.merge(data, this._raw || {}));
+    }).catch(err => {
+      this._loading = false;
+      const code = err && (err.code || err.error && err.error.code);
+      this._msg(code === 'unknown_command' || code === 'not_configured'
+        ? (it ? 'Aggiungi e configura l\'integrazione Home Flow Explorer per generare la mappa.' : 'Add and set up the Home Flow Explorer integration to build the map.')
+        : code === 'unauthorized'
+          ? (it ? 'La mappa descrive tutta la rete: la vedono solo gli amministratori.' : 'The map describes the whole network: only administrators can see it.')
+          : (it ? 'Non riesco a generare la mappa: ' : 'Could not build the map: ') + ((err && err.message) || code || ''));
+    });
+  }
+  static merge(auto, raw) {
+    const m = {...auto};
+    for (const k of ['title', 'intro', 'note', 'language', 'start', 'autoplay', 'layout', 'group_labels', 'debug']) if (raw[k] !== undefined) m[k] = raw[k];
+    const byId = (base, add) => { const out = (base || []).map(x => ({...x})); for (const x of add || []) { const i = out.findIndex(y => y.id === x.id); if (i >= 0) out[i] = {...out[i], ...x}; else out.push(x); } return out; };
+    m.nodes = byId(auto.nodes, raw.nodes);
+    m.boxes = byId(auto.boxes, raw.boxes);
+    m.scenarios = byId(auto.scenarios, raw.scenarios);
+    m.edges = [...(auto.edges || []), ...(raw.edges || [])];
+    const hide = new Set(raw.hide || []);
+    if (hide.size) {
+      m.nodes = m.nodes.filter(n => !hide.has(n.id));
+      m.edges = m.edges.filter(e => !hide.has(e[0]) && !hide.has(e[1]));
+      m.scenarios = m.scenarios.filter(s => !hide.has(s.id) && !s.steps.some(st => st.path.some(p => hide.has(p))));
+    }
+    return m;
+  }
+  set hass(h) { this._h = h; if (this._auto && !this._loaded) this._fetch(); const d = !!(h && h.themes && h.themes.darkMode); if (d !== this._dark) { this._dark = d; this.toggleAttribute('dark', d); } }
   getCardSize() { return 14; }
   connectedCallback() {
     if (this._hass === undefined && !this.hasAttribute('dark') && matchMedia('(prefers-color-scheme: dark)').matches && this.c && this.c.standalone) this.setAttribute('dark', '');
+    if (this._auto && !this._loaded) { this._wait(); return; }
     if (this.c && !this.built) this.build();
   }
-  disconnectedCallback() { cancelAnimationFrame(this.anim); clearTimeout(this.timer); this.ro && this.ro.disconnect(); this.built = false; }
+  disconnectedCallback() { cancelAnimationFrame(this.anim); clearTimeout(this.timer); this.ro && this.ro.disconnect(); this.built = false; this._loading = false; }
   $(s) { return this.root.querySelector(s); }
   build() {
     this.built = true; this.ro && this.ro.disconnect();
@@ -224,8 +278,10 @@ ${this.groups.length > 1 ? `<div class="tabs" role="tablist">${this.groups.map(g
     // whole SVG built by the HTML parser: the most Safari-friendly way
     this.mapw.innerHTML = `<svg class="map" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${t.map}" style="height:${Math.round(fw * H / W)}px;--f1:${f1}px;--f2:${f2}px">${h}</svg>`;
     const svg = this.svg = this.mapw.querySelector('svg');
-    svg.querySelectorAll('g.n').forEach(g => { try { const a = g.querySelector('.t1').getBBox(), b = g.querySelector('.t2').getBBox(), r = g.querySelector('.pill');
-      const x0 = Math.min(a.x, b.x) - 5, y0 = Math.min(a.y, b.y) - 1, x1 = Math.max(a.x + a.width, b.x + b.width) + 5, y1 = Math.max(a.y + a.height, b.y + b.height) + 1;
+    // label background: union of the non-empty label lines (an empty line has a 0,0 box that would stretch it)
+    svg.querySelectorAll('g.n').forEach(g => { try { const bs = [g.querySelector('.t1'), g.querySelector('.t2')].filter(x => x.textContent).map(x => x.getBBox()).filter(x => x.width), r = g.querySelector('.pill');
+      if (!bs.length) return;
+      const x0 = Math.min(...bs.map(b => b.x)) - 5, y0 = Math.min(...bs.map(b => b.y)) - 1, x1 = Math.max(...bs.map(b => b.x + b.width)) + 5, y1 = Math.max(...bs.map(b => b.y + b.height)) + 1;
       r.setAttribute('x', x0); r.setAttribute('y', y0); r.setAttribute('width', x1 - x0); r.setAttribute('height', y1 - y0); } catch (e) {} });
     if (this.S.length) { this.mark(); this.place(); }
     if (this.c.debug && !this._dbg) { this._dbg = 1; setTimeout(() => this.report(), 2500); }

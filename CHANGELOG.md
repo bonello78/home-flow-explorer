@@ -1,11 +1,21 @@
 # Changelog
 
+## 2.0.0
+
+Home Flow Explorer is now an integration that builds the map by itself.
+
+- Guided setup: router, how Home Assistant is connected, where Wi-Fi comes from
+- Reads devices, integrations, add-ons and automations and generates nodes, links and flows
+- Local or cloud comes from each integration's declared IoT class; push or polling decides how state comes back
+- Zigbee2MQTT, ZHA, deCONZ, Z-Wave, MQTT and Matter get their own chain inside the Home Assistant box
+- Network gear and NAS found by their integrations show up on their own; anything else (access points, switches, servers, cloud services) can be added and classified from Configure
+- Everyday flows generated from real devices, plus voice, notifications and a sensor event when they apply
+- Automations: triggers and targets read from their configuration, with the physical path of every hop
+- The integration serves the card itself: no dashboard resource to add
+- `source: auto` on the card; anything written in the card config adds to or overrides the generated map; `hide` removes nodes or flows
+- `home_flow_explorer.export` action returns the generated configuration
+- Fix: label backgrounds no longer stretch to the corner when a node has no second line
+
 ## 1.0.0
 
-First public release.
-
-- Map of cloud, network, server and device nodes with animated hops
-- Everyday actions and automations groups, node-to-flow lookup
-- Automatic layout for desktop and phone, optional hand-placed coordinates
-- English and Italian, light and dark themes
-- Works in the iOS companion app: explicit SVG height, method names that do not clash with properties Home Assistant sets on cards
+First public release: a card configured by hand.

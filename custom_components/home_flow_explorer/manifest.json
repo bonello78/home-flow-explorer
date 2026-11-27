@@ -1,0 +1,23 @@
+{
+  "domain": "home_flow_explorer",
+  "name": "Home Flow Explorer",
+  "codeowners": [
+    "@bonello78"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "frontend",
+    "websocket_api"
+  ],
+  "after_dependencies": [
+    "automation"
+  ],
+  "documentation": "https://github.com/bonello78/home-flow-explorer",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/bonello78/home-flow-explorer/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "2.0.0"
+}

@@ -1,0 +1,132 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Your home network",
+        "description": "Home Assistant sees your devices but not your router and network. Tell me the basics: you can add more objects later from Configure.",
+        "data": {
+          "router_name": "Router name",
+          "router_address": "Router address (optional)",
+          "ha_link": "How Home Assistant is connected",
+          "switch_name": "Switch name",
+          "wifi": "Where devices get Wi-Fi from",
+          "ap_name": "Access point name",
+          "host_label": "Name of the Home Assistant machine"
+        },
+        "data_description": {
+          "router_name": "For example its model: Fritz!Box, UniFi Gateway.",
+          "switch_name": "Only needed if Home Assistant goes through a switch.",
+          "ap_name": "Only needed if you choose to add an access point.",
+          "host_label": "Shown on the box around Home Assistant, for example Mini PC or Proxmox."
+        }
+      },
+      "scope": {
+        "title": "What to show",
+        "description": "The map updates itself when you add devices or automations. Here you choose how much it shows.",
+        "data": {
+          "excluded_integrations": "Integrations to hide",
+          "max_gestures": "How many everyday actions to generate",
+          "max_automations": "How many automations to show",
+          "automations": "Automations to show (optional)"
+        },
+        "data_description": {
+          "excluded_integrations": "For example test integrations or devices you do not want on the map.",
+          "automations": "Leave empty and the ones that use the most devices are picked for you."
+        }
+      }
+    },
+    "error": {
+      "required": "This field is needed for the option you picked"
+    },
+    "abort": {
+      "already_configured": "Home Flow Explorer is already set up. Use Configure to change it."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Home Flow Explorer",
+        "description": "What do you want to do?",
+        "menu_options": {
+          "add_object": "Add an object (router, access point, NAS, cloud…)",
+          "edit_object": "Edit an object",
+          "remove_object": "Remove objects",
+          "settings": "Map settings"
+        }
+      },
+      "add_object": {
+        "title": "Add an object",
+        "description": "For things Home Assistant cannot see: access points, switches, a NAS, a cloud service. The type decides where it sits on the map.",
+        "data": {
+          "name": "Name",
+          "kind": "Type",
+          "connected_to": "Connected to",
+          "medium": "Link type",
+          "address": "Address or short label (optional)",
+          "info": "Description (optional)"
+        },
+        "data_description": {
+          "name": "The name shown on the map, short is better.",
+          "address": "Shown under the name, for example 192.168.1.2.",
+          "info": "Shown when you tap the object on the map."
+        }
+      },
+      "edit_object": {
+        "title": "Edit an object",
+        "data": {
+          "object": "Object"
+        }
+      },
+      "edit_object_form": {
+        "title": "Edit {name}",
+        "data": {
+          "name": "Name",
+          "kind": "Type",
+          "connected_to": "Connected to",
+          "medium": "Link type",
+          "address": "Address or short label (optional)",
+          "info": "Description (optional)"
+        },
+        "data_description": {
+          "name": "The name shown on the map, short is better.",
+          "address": "Shown under the name, for example 192.168.1.2.",
+          "info": "Shown when you tap the object on the map."
+        }
+      },
+      "remove_object": {
+        "title": "Remove objects",
+        "description": "The router cannot be removed, only edited.",
+        "data": {
+          "objects": "Objects to remove"
+        }
+      },
+      "settings": {
+        "title": "Map settings",
+        "data": {
+          "language": "Text language",
+          "ha_link": "Home Assistant is connected to",
+          "wifi": "Wi-Fi devices connect to",
+          "host_label": "Name of the Home Assistant machine",
+          "excluded_integrations": "Integrations to hide",
+          "max_gestures": "How many everyday actions to generate",
+          "max_automations": "How many automations to show",
+          "automations": "Automations to show (optional)"
+        },
+        "data_description": {
+          "excluded_integrations": "For example test integrations or devices you do not want on the map.",
+          "automations": "Leave empty and the ones that use the most devices are picked for you."
+        }
+      }
+    },
+    "abort": {
+      "nothing_to_remove": "There is nothing to remove."
+    }
+  },
+  "services": {
+    "export": {
+      "name": "Export the map",
+      "description": "Returns the generated map configuration, to check it or copy it into a card."
+    }
+  },
+  "exceptions": {}
+}

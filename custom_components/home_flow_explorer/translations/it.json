@@ -1,0 +1,132 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "La rete di casa",
+        "description": "Home Assistant vede i tuoi dispositivi ma non il router e la rete. Raccontami le basi: potrai aggiungere altri oggetti in seguito, da Configura.",
+        "data": {
+          "router_name": "Nome del router",
+          "router_address": "Indirizzo del router (facoltativo)",
+          "ha_link": "Come è collegato Home Assistant",
+          "switch_name": "Nome dello switch",
+          "wifi": "Da dove prendono il Wi-Fi i dispositivi",
+          "ap_name": "Nome dell'access point",
+          "host_label": "Nome della macchina di Home Assistant"
+        },
+        "data_description": {
+          "router_name": "Per esempio il modello: Fritz!Box, Vodafone Station.",
+          "switch_name": "Serve solo se Home Assistant passa da uno switch.",
+          "ap_name": "Serve solo se scegli di aggiungere un access point.",
+          "host_label": "Compare sul riquadro che contiene Home Assistant, per esempio Mini PC o Proxmox."
+        }
+      },
+      "scope": {
+        "title": "Cosa mostrare",
+        "description": "La mappa si aggiorna da sola quando aggiungi dispositivi o automazioni. Qui scegli quanto deve essere ricca.",
+        "data": {
+          "excluded_integrations": "Integrazioni da non mostrare",
+          "max_gestures": "Quanti gesti quotidiani generare",
+          "max_automations": "Quante automazioni mostrare",
+          "automations": "Automazioni da mostrare (facoltativo)"
+        },
+        "data_description": {
+          "excluded_integrations": "Per esempio integrazioni di prova o dispositivi che non vuoi sulla mappa.",
+          "automations": "Se lasci vuoto, scelgo io quelle che usano più dispositivi."
+        }
+      }
+    },
+    "error": {
+      "required": "Questo campo serve per la scelta che hai fatto"
+    },
+    "abort": {
+      "already_configured": "Home Flow Explorer è già configurato. Per cambiarlo usa Configura."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Home Flow Explorer",
+        "description": "Cosa vuoi fare?",
+        "menu_options": {
+          "add_object": "Aggiungi un oggetto (router, access point, NAS, cloud…)",
+          "edit_object": "Modifica un oggetto",
+          "remove_object": "Rimuovi oggetti",
+          "settings": "Impostazioni della mappa"
+        }
+      },
+      "add_object": {
+        "title": "Aggiungi un oggetto",
+        "description": "Per le cose che Home Assistant non vede: access point, switch, NAS, un servizio cloud. Il tipo decide dove compare sulla mappa.",
+        "data": {
+          "name": "Nome",
+          "kind": "Tipo",
+          "connected_to": "Collegato a",
+          "medium": "Come è collegato",
+          "address": "Indirizzo o sigla (facoltativo)",
+          "info": "Descrizione (facoltativa)"
+        },
+        "data_description": {
+          "name": "Il nome che compare sulla mappa, meglio se corto.",
+          "address": "Compare sotto il nome, per esempio 192.168.1.2.",
+          "info": "Compare quando tocchi l'oggetto sulla mappa."
+        }
+      },
+      "edit_object": {
+        "title": "Modifica un oggetto",
+        "data": {
+          "object": "Oggetto"
+        }
+      },
+      "edit_object_form": {
+        "title": "Modifica {name}",
+        "data": {
+          "name": "Nome",
+          "kind": "Tipo",
+          "connected_to": "Collegato a",
+          "medium": "Come è collegato",
+          "address": "Indirizzo o sigla (facoltativo)",
+          "info": "Descrizione (facoltativa)"
+        },
+        "data_description": {
+          "name": "Il nome che compare sulla mappa, meglio se corto.",
+          "address": "Compare sotto il nome, per esempio 192.168.1.2.",
+          "info": "Compare quando tocchi l'oggetto sulla mappa."
+        }
+      },
+      "remove_object": {
+        "title": "Rimuovi oggetti",
+        "description": "Il router non si può rimuovere: si può solo modificare.",
+        "data": {
+          "objects": "Oggetti da rimuovere"
+        }
+      },
+      "settings": {
+        "title": "Impostazioni della mappa",
+        "data": {
+          "language": "Lingua dei testi",
+          "ha_link": "Home Assistant è collegato a",
+          "wifi": "I dispositivi Wi-Fi si collegano a",
+          "host_label": "Nome della macchina di Home Assistant",
+          "excluded_integrations": "Integrazioni da non mostrare",
+          "max_gestures": "Quanti gesti quotidiani generare",
+          "max_automations": "Quante automazioni mostrare",
+          "automations": "Automazioni da mostrare (facoltativo)"
+        },
+        "data_description": {
+          "excluded_integrations": "Per esempio integrazioni di prova o dispositivi che non vuoi sulla mappa.",
+          "automations": "Se lasci vuoto, scelgo io quelle che usano più dispositivi."
+        }
+      }
+    },
+    "abort": {
+      "nothing_to_remove": "Non ci sono oggetti da rimuovere."
+    }
+  },
+  "services": {
+    "export": {
+      "name": "Esporta la mappa",
+      "description": "Restituisce la configurazione della mappa generata, per controllarla o copiarla in una card."
+    }
+  },
+  "exceptions": {}
+}
