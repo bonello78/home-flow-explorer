@@ -67,7 +67,7 @@
         },
         "data_description": {
           "name": "Il nome che compare sulla mappa, meglio se corto.",
-          "address": "Compare sotto il nome, per esempio 192.168.1.2.",
+          "address": "Compare sotto il nome, per esempio 192.168.0.2.",
           "info": "Compare quando tocchi l'oggetto sulla mappa."
         }
       },
@@ -89,7 +89,7 @@
         },
         "data_description": {
           "name": "Il nome che compare sulla mappa, meglio se corto.",
-          "address": "Compare sotto il nome, per esempio 192.168.1.2.",
+          "address": "Compare sotto il nome, per esempio 192.168.0.2.",
           "info": "Compare quando tocchi l'oggetto sulla mappa."
         }
       },

@@ -67,7 +67,7 @@
         },
         "data_description": {
           "name": "The name shown on the map, short is better.",
-          "address": "Shown under the name, for example 192.168.1.2.",
+          "address": "Shown under the name, for example 192.168.0.2.",
           "info": "Shown when you tap the object on the map."
         }
       },
@@ -89,7 +89,7 @@
         },
         "data_description": {
           "name": "The name shown on the map, short is better.",
-          "address": "Shown under the name, for example 192.168.1.2.",
+          "address": "Shown under the name, for example 192.168.0.2.",
           "info": "Shown when you tap the object on the map."
         }
       },

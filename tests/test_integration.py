@@ -88,20 +88,20 @@ async def test_options(hass):
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     result = await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "add_object"})
     result = await hass.config_entries.options.async_configure(result["flow_id"], {
-        "name": "BonelloNAS", "kind": "nas", "connected_to": "switch", "medium": "cable", "address": "192.168.0.40", "info": ""})
+        "name": "HomeNAS", "kind": "nas", "connected_to": "switch", "medium": "cable", "address": "192.168.0.40", "info": ""})
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     objs = {o["id"]: o for o in entry.options["objects"]}
-    assert objs["obj_bonellonas"]["kind"] == "nas"
+    assert objs["obj_homenas"]["kind"] == "nas"
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "edit_object"})
-    result = await hass.config_entries.options.async_configure(result["flow_id"], {"object": "obj_bonellonas"})
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {"object": "obj_homenas"})
     assert result["step_id"] == "edit_object_form"
     result = await hass.config_entries.options.async_configure(result["flow_id"], {
         "name": "NAS", "kind": "nas", "connected_to": "router", "medium": "cable", "address": "", "info": "Backups"})
     await hass.async_block_till_done()
-    assert {o["id"]: o for o in entry.options["objects"]}["obj_bonellonas"]["name"] == "NAS"
+    assert {o["id"]: o for o in entry.options["objects"]}["obj_homenas"]["name"] == "NAS"
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "settings"})
@@ -114,9 +114,9 @@ async def test_options(hass):
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "remove_object"})
-    result = await hass.config_entries.options.async_configure(result["flow_id"], {"objects": ["obj_bonellonas"]})
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {"objects": ["obj_homenas"]})
     await hass.async_block_till_done()
-    assert "obj_bonellonas" not in {o["id"] for o in entry.options["objects"]}
+    assert "obj_homenas" not in {o["id"] for o in entry.options["objects"]}
 
     resp = await hass.services.async_call(DOMAIN, "export", {}, blocking=True, return_response=True)
     assert resp["language"] == "it"
