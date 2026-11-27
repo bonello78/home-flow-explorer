@@ -1,0 +1,77 @@
+# Fictional example home. Every value here is made up.
+type: custom:home-flow-explorer
+title: How messages travel in our home
+note: Example data. Topics and payloads are illustrative.
+language: en
+boxes:
+  - {id: minipc, label: "Mini PC · Home Assistant OS"}
+nodes:
+  - {id: nabu, name: Nabu Casa, sub: remote access, zone: cloud, info: Encrypted tunnel opened by Home Assistant. No open ports on the router.}
+  - {id: away, name: Phone, sub: away, zone: cloud, info: Your phone on mobile data with the companion app.}
+  - {id: push, name: Push service, sub: APNs / FCM, zone: cloud, info: Delivers notifications from Home Assistant to the phone.}
+  - {id: voice, name: Voice cloud, sub: assistant, zone: cloud, info: Speech recognition for the smart speaker.}
+  - {id: router, name: Router, sub: 192.168.0.1, zone: net, info: ISP router with DHCP and Wi-Fi.}
+  - {id: ap, name: Access point, sub: Wi-Fi, zone: net, info: Second access point on the same subnet.}
+  - {id: ha, name: Home Assistant, sub: 192.168.0.10, zone: server, box: minipc, info: The automation hub.}
+  - {id: mqtt, name: MQTT, sub: broker, zone: server, box: minipc, info: Message broker for Wi-Fi relays and Zigbee2MQTT.}
+  - {id: z2m, name: Z2M, sub: Zigbee2MQTT, zone: server, box: minipc, info: Translates Zigbee frames into MQTT messages.}
+  - {id: coord, name: Coordinator, sub: USB, zone: server, box: minipc, info: Zigbee coordinator stick.}
+  - {id: phone, name: Phone, sub: Wi-Fi, zone: device, info: Your phone at home.}
+  - {id: relay, name: Light relay, sub: Wi-Fi MQTT, zone: device, info: A Wi-Fi relay behind a wall switch.}
+  - {id: speaker, name: Speaker, sub: voice, zone: device, info: Smart speaker in the living room.}
+  - {id: motion, name: Motion, sub: Zigbee, zone: device, info: Battery motion sensor in the hallway.}
+edges:
+  - [nabu, router, internet]
+  - [push, router, internet]
+  - [voice, router, internet]
+  - [voice, nabu, internet]
+  - [away, nabu, internet]
+  - [push, away, internet]
+  - [router, ap, cable]
+  - [router, ha, cable]
+  - [ap, phone, wifi]
+  - [ap, relay, wifi]
+  - [ap, speaker, wifi]
+  - [ha, mqtt, internal]
+  - [mqtt, z2m, internal]
+  - [z2m, coord, internal]
+  - [coord, motion, zigbee]
+scenarios:
+  - id: light-app
+    group: everyday
+    title: I turn on a light from the app
+    summary: The app asks Home Assistant, Home Assistant asks the relay over MQTT, the relay confirms.
+    offline: Works without internet. Away from home you need the remote tunnel.
+    steps:
+      - {title: You tap the light, path: [phone, ap, router, ha], text: The app talks to Home Assistant on the home network., data: [[Action, light.turn_on]]}
+      - {title: Command on the broker, path: [ha, mqtt], text: Home Assistant publishes the command on the relay topic., data: [[Topic, "relay/<id>/command"], [Payload, "on"], [Note, example topic]]}
+      - {title: The relay switches, path: [mqtt, ha, router, ap, relay], text: The relay is subscribed to the broker and closes its contact.}
+      - {title: State confirmed, path: [relay, ap, router, ha, mqtt], text: The relay publishes its new state. This is what lights up the icon in the app., data: [[Payload, "on"]]}
+  - id: voice-light
+    group: everyday
+    title: I ask the speaker to turn on the light
+    summary: Your voice goes to the cloud, the cloud calls Home Assistant through the tunnel, the light switches locally.
+    offline: Without internet the speaker cannot understand you.
+    steps:
+      - {title: You speak, path: [speaker, ap, router, voice], out: true, text: The speaker sends the audio to the voice cloud.}
+      - {title: The cloud calls Home Assistant, path: [voice, nabu, router, ha], out: true, text: The request enters through the remote tunnel.}
+      - {title: The light turns on, path: [ha, mqtt, ha, router, ap, relay], text: From here it is the same local path as the app.}
+  - id: motion-night
+    group: automations
+    title: Motion in the hallway at night
+    summary: A Zigbee sensor detects motion and an automation turns on the hallway light at low brightness.
+    offline: Works without internet.
+    steps:
+      - {title: Motion detected, path: [motion, coord], text: The sensor wakes up and sends a Zigbee report., data: [[Network, Zigbee 2.4 GHz]]}
+      - {title: Becomes MQTT, path: [coord, z2m, mqtt], text: Zigbee2MQTT publishes the sensor state., data: [[Payload, '{"occupancy": true}']]}
+      - {title: The automation fires, path: [mqtt, ha], text: The binary sensor turns on and the automation checks the time., data: [[Trigger, motion detected], [Condition, after sunset]]}
+      - {title: Light at 20%, path: [ha, mqtt, ha, router, ap, relay], text: Home Assistant sends the command to the relay.}
+  - id: notify
+    group: automations
+    title: Notification when nobody is home
+    summary: The same motion while everyone is away sends a push notification.
+    offline: Without internet the notification is not delivered.
+    steps:
+      - {title: Motion while away, path: [motion, coord, z2m, mqtt, ha], text: Same path as before up to Home Assistant.}
+      - {title: Push sent, path: [ha, router, push], out: true, text: Home Assistant hands the message to the push service.}
+      - {title: It reaches your phone, path: [push, away], out: true, text: The phone gets it wherever it is.}
