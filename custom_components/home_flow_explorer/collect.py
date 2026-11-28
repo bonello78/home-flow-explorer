@@ -36,8 +36,8 @@ async def async_snapshot(hass: HomeAssistant) -> dict[str, Any]:
 
     devices = []
     host_label = None
-    for d in dev_reg.devices.values():
-        entry_id = getattr(d, "primary_config_entry", None) or next(iter(d.config_entries), None)
+    for d in _device_entries(dev_reg):
+        entry_id = _device_entry_id(d)
         ident = [list(i) for i in d.identifiers]
         if ident and ident[0][0] == "hassio" and ident[0][1] == "OS":
             host_label = d.model or d.name
@@ -115,3 +115,24 @@ async def async_choices(hass: HomeAssistant) -> dict[str, Any]:
         "host_label": snap["host_label"],
         "language": snap["language"],
     }
+
+
+def _device_entries(dev_reg) -> list:
+    """Device entries on any Core version: newer registries iterate entries, older ones are mappings."""
+    items = list(dev_reg.devices)
+    if items and isinstance(items[0], str):
+        return list(dev_reg.devices.values())
+    return items
+
+
+def _device_entry_id(d) -> str | None:
+    """The device's config entry: config_entry_id on newer Core, primary_config_entry before it."""
+    for attr in ("config_entry_id", "primary_config_entry"):
+        try:
+            val = object.__getattribute__(d, attr)
+        except AttributeError:
+            continue
+        if val:
+            return val
+    entries = getattr(d, "config_entries", None)
+    return next(iter(entries), None) if entries else None
