@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Icon and logo: shown in Settings → Integrations (Home Assistant 2026.3 or later) and at the top of the README
+- Automations started by Home Assistant itself (start or shutdown), automations that only send a notification and triggers on many entities read better
+- Device registry read without the calls Home Assistant marks as deprecated
+
 ## 2.0.0
 
 Home Flow Explorer is now an integration that builds the map by itself.

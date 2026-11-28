@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png">
+    <img src="docs/logo.png" alt="Home Flow Explorer" height="96">
+  </picture>
+</p>
+
 # Home Flow Explorer
 
 A map of how messages actually travel through your smart home. Pick something that happens ("I turn on the floor lamp from the app", "the irrigation automation runs at 7") and a packet walks the path hop by hop: phone, Wi-Fi, Home Assistant, MQTT, Zigbee2MQTT, coordinator, device, or out to a vendor cloud and back. Each hop shows what is sent and whether it stays local or leaves the house.
